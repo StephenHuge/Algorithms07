@@ -1,16 +1,4 @@
-package my.graph.test;
-/******************************************************************************
- *  Compilation:  javac Grayscale.java
- *  Execution:    java Grayscale filename
- *  Data files:   http://www.cs.princeton.edu/introcs/31datatype/mandrill.jpg
- *                http://www.cs.princeton.edu/introcs/31datatype/darwin.jpg
- *
- *  Reads in an image from a file, converts it to grayscale, and
- *  displays it on the screen.
- *
- *  % java Grayscale image.jpg
- *
- ******************************************************************************/
+
 
 import java.awt.Color;
 

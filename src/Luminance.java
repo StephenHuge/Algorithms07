@@ -1,4 +1,4 @@
-package my.graph.test;
+
 
 /******************************************************************************
  *  Compilation:  javac Luminance.java
