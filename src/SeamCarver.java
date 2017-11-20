@@ -3,11 +3,11 @@ import java.awt.Color;
 import edu.princeton.cs.algs4.Picture;
 
 public class SeamCarver {
-    
+
     private Picture pic;
-    
+
     private double[][] energies;
-    
+
     public SeamCarver(Picture picture)                // create a seam carver object based on the given picture
     {
         if (picture == null)    throw new java.lang.IllegalArgumentException();
@@ -44,8 +44,8 @@ public class SeamCarver {
         Color right = pic.get(x + 1, y);
         Color left = pic.get(x - 1, y);
         double ans = square(right.getBlue() - left.getBlue())
-                   + square(right.getGreen() - left.getGreen())
-                   + square(right.getRed() - left.getRed());
+                + square(right.getGreen() - left.getGreen())
+                + square(right.getRed() - left.getRed());
         return ans;
     }
     private double square(int i) {
@@ -55,8 +55,8 @@ public class SeamCarver {
         Color up = pic.get(x, y + 1);
         Color down = pic.get(x, y - 1);
         double ans = square(up.getBlue() - down.getBlue())
-                   + square(up.getGreen() - down.getGreen())
-                   + square(up.getRed() - down.getRed());
+                + square(up.getGreen() - down.getGreen())
+                + square(up.getRed() - down.getRed());
         return ans;
     }
     public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
@@ -66,6 +66,9 @@ public class SeamCarver {
     public int[] findVerticalSeam()                 // sequence of indices for vertical seam
     {
         return null;
+    }
+    private int min(int a, int b, int c) {
+        return (a > b) ? (b > c ? c : b) : (c < a ? c : a);
     }
     public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
     {
@@ -77,9 +80,8 @@ public class SeamCarver {
     }
     private void validateArray(int[] arr, Direction dir) {
         if (arr == null)    throw new java.lang.IllegalArgumentException();
-        
-        int len = 0;                    // for checking array's length
-        int range = 0;                  // for checking range of entries in array
+        // for checking array's length and range of entries in array
+        int len = 0, range = 0;                  
         if (dir == Direction.Vertical)          {
             len = height();
             range = width();
@@ -93,13 +95,13 @@ public class SeamCarver {
     }
     private void checkArrayContent(int[] arr, int range) {
         for (int i = 0; i < arr.length - 1; i++) {
-            if (Math.abs(arr[i] - arr[i + 1]) > 1)      // only adjacent vertex is allowed  
-                throw new java.lang.IllegalArgumentException();
-            if (arr[i] < 0 || arr[i] > range)           // check whether entry is in the range        
-                throw new java.lang.IllegalArgumentException();
+            // only adjacent vertex is allowed
+            if (Math.abs(arr[i] - arr[i + 1]) > 1)     throw new java.lang.IllegalArgumentException();
+            // check whether entry is in the range
+            if (arr[i] < 0 || arr[i] > range)          throw new java.lang.IllegalArgumentException();
         }
-        int last = arr.length - 1;                      // in for loop, last array entry is not checked
-        if (arr[last] < 0 || arr[last] > range)     throw new java.lang.IllegalArgumentException();
+        int last = arr.length - 1;                     // in for loop, last array entry is not checked
+        if (arr[last] < 0 || arr[last] > range)        throw new java.lang.IllegalArgumentException();
     }
     private enum Direction {
         Vertical, Horizontal;
