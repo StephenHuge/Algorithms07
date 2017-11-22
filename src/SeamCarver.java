@@ -12,7 +12,7 @@ public class SeamCarver {
     {
         if (picture == null)    throw new java.lang.IllegalArgumentException();
         this.pic = picture;
-        this.energies = new double[pic.height() + 2][pic.width() + 2];
+        this.energies = new double[pic.height() + 2][pic.width() + 2];  // horizontal length * vertical length
         for (int i = 0; i < pic.height() + 2; i++) {
             for (int j = 0; j < pic.width() + 2; j++) {
                 if ((i == 0 || i == pic.height() + 1) ||
@@ -66,8 +66,8 @@ public class SeamCarver {
     {
         int[] ans = null;
         int minEnergy = 0; 
-        for (int i = 0; i < height(); i++) {
-            int[] t = new int[height() + 1];
+        for (int i = 0; i < width(); i++) {
+            int[] t = new int[width() + 1];
             getNextPixel(new Axis(0, i), Direction.Horizontal, t);
             if ((minEnergy == 0) || (t[t.length - 1] < minEnergy)) {
                 ans = t; 
@@ -125,7 +125,7 @@ public class SeamCarver {
             System.out.println();
         }
         System.out.println("------------------------");
-        /*int[] ans = new int[seam.height() + 1];
+        int[] ans = new int[seam.height() + 1];
         for (int i = 0; i < seam.height(); i++) {
             Axis start = new Axis(i, 0);
             Axis next = seam.getNextPixel(start, Direction.Vertical, ans);
@@ -135,8 +135,8 @@ public class SeamCarver {
             System.out.println();
             ans[ans.length - 1] = 0;
         }
-        printAns(ans, seam.energies);*/
-        System.out.println(String.format("Pic : %d X %d", seam.width(), seam.height()));
+        printAns(ans, seam.energies, Direction.Vertical);
+        /*System.out.println(String.format("Pic : %d X %d", seam.width(), seam.height()));
         int[] ans = new int[seam.width() + 1];
         for (int i = 0; i < seam.width(); i++) {
             Axis start = new Axis(0, i);
@@ -150,7 +150,7 @@ public class SeamCarver {
         int[] sol = seam.findHorizontalSeam();
         for (int i : sol)
             System.out.print(i + " ");
-        System.out.println();
+        System.out.println();*/
 //        printAns(sol, seam.energies, Direction.Horizontal);
     }
     private static void printAns(int[] ans, double[][] energies, Direction dir) {
