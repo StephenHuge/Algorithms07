@@ -17,7 +17,7 @@ public class SeamCarver {
             for (int j = 0; j < pic.width() + 2; j++) {
                 if ((i == 0 || i == pic.height() + 1) ||
                         (j == 0 || j == pic.width() + 1))
-                    energies[i][j] = 2000;           // to simplify code
+                    energies[i][j] = 2000;                           // to simplify code
                 else    energies[i][j] = energy(i - 1, j - 1);       // get array energies
             }
         }
@@ -75,9 +75,6 @@ public class SeamCarver {
     public int[] findVerticalSeam()                 // sequence of indices for vertical seam
     {
         return null;
-    }
-    private int min(int a, int b, int c) {
-        return (a > b) ? (b > c ? c : b) : (c < a ? c : a);
     }
     public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
     {
