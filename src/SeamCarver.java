@@ -12,12 +12,21 @@ public class SeamCarver {
     {
         if (picture == null)    throw new java.lang.IllegalArgumentException();
         this.pic = picture;
-        this.energies = new double[pic.height()][pic.width()];
+        this.energies = new double[pic.height() + 2][pic.width() + 2];
+        for (int i = 0; i < pic.height() + 2; i++) {
+            for (int j = 0; j < pic.width() + 2; j++) {
+                if ((i == 0 || i == pic.height() + 1) ||
+                        (j == 0 || j == pic.width() + 1))
+                    energies[i][j] = 2000;           // to simplify code
+                else    energies[i][j] = energy(i - 1, j - 1);       // get array energies
+            }
+        }
+        /*this.energies = new double[pic.height()][pic.width()];
         for (int i = 0; i < pic.height(); i++) {
             for (int j = 0; j < pic.width(); j++) {
                 energies[i][j] = energy(i, j);       // get array energies
             }
-        }
+        }*/
     }
     public Picture picture()                          // current picture
     {
