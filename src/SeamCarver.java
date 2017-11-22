@@ -64,7 +64,17 @@ public class SeamCarver {
     }
     public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
     {
-        return null;
+        int[] ans = null;
+        int minEnergy = 0; 
+        for (int i = 0; i < height(); i++) {
+            int[] t = new int[height() + 1];
+            getNextPixel(new Axis(0, i), Direction.Horizontal, t);
+            if ((minEnergy == 0) || (t[t.length - 1] < minEnergy)) {
+                ans = t; 
+                minEnergy = ans[ans.length - 1];
+            }
+        }
+        return ans;
     }
     public int[] findVerticalSeam()                 // sequence of indices for vertical seam
     {
@@ -72,100 +82,94 @@ public class SeamCarver {
     }
 
     /**
-     * give a pixel, find pixel with smallest energy adjacent to it 
+     * give a pixel, find a line with smallest energy adjacent to it 
      */
-    private  Axis getNextPixel(Axis current, Direction dir) {
+    private  Axis getNextPixel(Axis current, Direction dir, int[] ans) {
         int x = current.x, y = current.y;
         double a = 0, b = 0, c = 0; 
         if (dir == Direction.Vertical) {
-            if (y == height() - 1)  return current;
+            ans[y] = x;
+            ans[ans.length - 1] += energies[y + 1][x + 1]; 
+            if (y == height() - 1)      return current;
             y++;
             // three adjacent pixels
             a = energies[y + 1][x    ];
             b = energies[y + 1][x + 1];
             c = energies[y + 1][x + 2];
-            System.out.println(String.format("Line %d : a-%.2f, b-%.2f, c-%.2f", y - 1, a, b, c));
+//            System.out.println(String.format("Pixel-%s : a-%.2f, b-%.2f, c-%.2f", current, a, b, c));
             x = (a > b) ? (b > c ? (x + 1) : x) : (c < a ? (x + 1) : (x - 1));
         } else if (dir == Direction.Horizontal) {
-            if (x == width() - 1)  return current;
+            ans[x] = y;
+            ans[ans.length - 1] += energies[x + 1][y + 1];
+            if (x == width() - 1)   return current;
             x++;
             a = energies[y    ][x + 1];
             b = energies[y + 1][x + 1];
             c = energies[y + 2][x + 1];
-            System.out.println(String.format("Line %d : a-%.2f, b-%.2f, c-%.2f", x - 1, a, b, c));
+//            System.out.println(String.format("Pixel-%s : a-%.2f, b-%.2f, c-%.2f", current, a, b, c));
             y = (a > b) ? (b > c ? (y + 1) : y) : (c < a ? (y + 1) : (y - 1));
         }
-        return new Axis(x, y);
+        Axis dist = getNextPixel(new Axis(x, y), dir, ans);  // recursively execute this method 
+        return dist;
     }
 
-    /* public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
-    {
-        // recursively find shortest path
-        int[] ans = null; 
-        for (int i = 0; i < width(); i++) {
-            ans = new int[width() + 1];
-            int[] sol = findPath(Direction.Horizontal, 0, i, ans);
-            if (ans[width()] > sol[width()])
-                ans = sol;
+    public static void main(String[] args) {
+        Picture pic = new Picture(args[0]);
+        SeamCarver seam = new SeamCarver(pic);
+
+        System.out.println("seam's energies");
+        for (int i = 0; i < seam.height(); i++) {
+            for (int j = 0; j < seam.width(); j++) {
+                System.out.print(String.format("%.2f\t", seam.energies[i + 1][j + 1]));
+            }
+            System.out.println();
         }
-        ans = trim(ans, width());
-        return ans;
+        System.out.println("------------------------");
+        /*int[] ans = new int[seam.height() + 1];
+        for (int i = 0; i < seam.height(); i++) {
+            Axis start = new Axis(i, 0);
+            Axis next = seam.getNextPixel(start, Direction.Vertical, ans);
+            System.out.print("Array : ");
+            for (int j : ans)
+                System.out.print(j + " ");
+            System.out.println();
+            ans[ans.length - 1] = 0;
+        }
+        printAns(ans, seam.energies);*/
+        System.out.println(String.format("Pic : %d X %d", seam.width(), seam.height()));
+        int[] ans = new int[seam.width() + 1];
+        for (int i = 0; i < seam.width(); i++) {
+            Axis start = new Axis(0, i);
+            Axis next = seam.getNextPixel(start, Direction.Horizontal, ans);
+            System.out.print("Array : ");
+            for (int j : ans)
+                System.out.print(j + "   ");
+            System.out.println();
+            ans[ans.length - 1] = 0;
+        }
+        int[] sol = seam.findHorizontalSeam();
+        for (int i : sol)
+            System.out.print(i + " ");
+        System.out.println();
+//        printAns(sol, seam.energies, Direction.Horizontal);
     }
-    public int[] findVerticalSeam()                 // sequence of indices for vertical seam
-    {
-        // recursively find shortest path
-        int[] ans = null; 
-        for (int i = 0; i < height(); i++) {
-            ans = new int[height() + 1];
-            int[] sol = findPath(Direction.Vertical, 0, i, ans);
-            if (ans[height()] > sol[height()])
-                ans = sol;
+    private static void printAns(int[] ans, double[][] energies, Direction dir) {
+        String marker = " ";
+        for (int i = 1; i < energies.length - 1; i++) {
+            for (int j = 1; j < energies[0].length - 1; j++) {
+                if (dir == Direction.Vertical) {
+                    if (ans[i - 1] == (j - 1)) marker = "*";
+                    System.out.print(String.format("%.2f%s   ", energies[i][j], marker));
+                    marker = " ";
+                } else if (dir == Direction.Horizontal) {
+                    if (ans[j - 1] == (i - 1)) marker = "*";
+                    System.out.print(String.format("%.2f%s   ", energies[i][j], marker));
+                    marker = " ";
+                }
+            }
+            System.out.println();
         }
-        ans = trim(ans, height());
-        return ans;
     }
-    private int[] trim(int[] ans, int len) {
-        int[] t = new int[len];
-        for (int i = 0; i < len; i++) {
-            t[i] = ans[i];
-        }
-        return t;
-    }
-     *//**
-     * @param dir       direction that seam goes
-     * @param index     index of the ans array, same direction with seam
-     * @param path      the row or col that we manage now
-     * @param ans       the answer
-     * @return          the answer
-     *//*
-    private int[] findPath(Direction dir, int index, int path, int[] ans) {
-        if ((dir == Direction.Vertical) && (index == height())) {
-            for (int p = 0; p < height(); p++)  // get this path's length
-                ans[index] += energies[p + 1][ans[p] + 1];
-            return ans;  
-        } else if ((dir == Direction.Horizontal) && (index == width())) {
-            for (int p = 0; p < width(); p++)
-                ans[index] += energies[ans[p] + 1][p + 1];
-            return ans;  
-        }
-        if (index == 0)     ans[index] = path;
-        else                ans[index] = getMin(dir, index, ans[index - 1]) - 1;
-        findPath(dir, index + 1, ans[index], ans);
-        return ans;
-    }
-    private int getMin(Direction dir, int index, int path) {
-        double a = 0, b = 0, c = 0;
-        if (dir == Direction.Vertical) {
-            a = energies[index + 1][path];
-            b = energies[index + 1][path + 1];
-            c = energies[index + 1][path + 2];
-        } else if (dir == Direction.Horizontal) {
-            a = energies[path][index + 1];
-            b = energies[path + 1][index + 1];
-            c = energies[path + 2][index + 1];
-        }
-        return (a > b) ? (b > c ? (path + 2) : (path + 1)) : (c < a ? (path + 2) : path);
-    }*/
     public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
     {
         validateArray(seam, Direction.Horizontal);
@@ -214,19 +218,8 @@ public class SeamCarver {
             return "(" + x + ", " + y + ")";
         }
     }
-    public static void main(String[] args) {
-        Picture pic = new Picture(args[0]);
-        SeamCarver seam = new SeamCarver(pic);
-        
-        System.out.println("seam's energies");
-        for (int i = 0; i < seam.height(); i++) {
-            for (int j = 0; j < seam.width(); j++) {
-                System.out.print(String.format("%.2f\t", seam.energies[i + 1][j + 1]));
-            }
-            System.out.println();
-        }
-        System.out.println("------------------------");
-        for (int i = 0; i < seam.height(); i++) {
+}
+/* for (int i = 0; i < seam.height(); i++) {
             for (int j = 0; j < seam.width(); j++) {
                 Axis start = new Axis(j, i);
                 Axis next = seam.getNextPixel(start, Direction.Horizontal);
@@ -235,6 +228,73 @@ public class SeamCarver {
                 System.out.println(String.format("\t%s's next smallest pixel is %.2f", start, ans));
             }
             System.out.println("------------------------");
+        }*/
+
+/* public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
+    {
+        // recursively find shortest path
+        int[] ans = null; 
+        for (int i = 0; i < width(); i++) {
+            ans = new int[width() + 1];
+            int[] sol = findPath(Direction.Horizontal, 0, i, ans);
+            if (ans[width()] > sol[width()])
+                ans = sol;
         }
+        ans = trim(ans, width());
+        return ans;
     }
-}
+    public int[] findVerticalSeam()                 // sequence of indices for vertical seam
+    {
+        // recursively find shortest path
+        int[] ans = null; 
+        for (int i = 0; i < height(); i++) {
+            ans = new int[height() + 1];
+            int[] sol = findPath(Direction.Vertical, 0, i, ans);
+            if (ans[height()] > sol[height()])
+                ans = sol;
+        }
+        ans = trim(ans, height());
+        return ans;
+    }
+    private int[] trim(int[] ans, int len) {
+        int[] t = new int[len];
+        for (int i = 0; i < len; i++) {
+            t[i] = ans[i];
+        }
+        return t;
+    }
+ *//**
+ * @param dir       direction that seam goes
+ * @param index     index of the ans array, same direction with seam
+ * @param path      the row or col that we manage now
+ * @param ans       the answer
+ * @return          the answer
+ *//*
+    private int[] findPath(Direction dir, int index, int path, int[] ans) {
+        if ((dir == Direction.Vertical) && (index == height())) {
+            for (int p = 0; p < height(); p++)  // get this path's length
+                ans[index] += energies[p + 1][ans[p] + 1];
+            return ans;  
+        } else if ((dir == Direction.Horizontal) && (index == width())) {
+            for (int p = 0; p < width(); p++)
+                ans[index] += energies[ans[p] + 1][p + 1];
+            return ans;  
+        }
+        if (index == 0)     ans[index] = path;
+        else                ans[index] = getMin(dir, index, ans[index - 1]) - 1;
+        findPath(dir, index + 1, ans[index], ans);
+        return ans;
+    }
+    private int getMin(Direction dir, int index, int path) {
+        double a = 0, b = 0, c = 0;
+        if (dir == Direction.Vertical) {
+            a = energies[index + 1][path];
+            b = energies[index + 1][path + 1];
+            c = energies[index + 1][path + 2];
+        } else if (dir == Direction.Horizontal) {
+            a = energies[path][index + 1];
+            b = energies[path + 1][index + 1];
+            c = energies[path + 2][index + 1];
+        }
+        return (a > b) ? (b > c ? (path + 2) : (path + 1)) : (c < a ? (path + 2) : path);
+    }*/
