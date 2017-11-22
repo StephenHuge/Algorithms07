@@ -92,6 +92,7 @@ public class SeamCarver {
             a = energies[y    ][x + 1];
             b = energies[y + 1][x + 1];
             c = energies[y + 2][x + 1];
+            System.out.println(String.format("Line %d : a-%.2f, b-%.2f, c-%.2f", x - 1, a, b, c));
             y = (a > b) ? (b > c ? (y + 1) : y) : (c < a ? (y + 1) : (y - 1));
         }
         return new Axis(x, y);
@@ -228,7 +229,7 @@ public class SeamCarver {
         for (int i = 0; i < seam.height(); i++) {
             for (int j = 0; j < seam.width(); j++) {
                 Axis start = new Axis(j, i);
-                Axis next = seam.getNextPixel(start, Direction.Vertical);
+                Axis next = seam.getNextPixel(start, Direction.Horizontal);
 //                System.out.println(String.format("%s's next smallest pixel is %s", start, next));
                 double ans = seam.energies[next.y + 1][next.x + 1];
                 System.out.println(String.format("\t%s's next smallest pixel is %.2f", start, ans));
