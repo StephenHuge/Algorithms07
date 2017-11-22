@@ -62,15 +62,42 @@ public class SeamCarver {
                 + square(up.getRed() - down.getRed());
         return ans;
     }
-    /* public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
+    public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
     {
         return null;
     }
     public int[] findVerticalSeam()                 // sequence of indices for vertical seam
     {
         return null;
-    }*/
-    public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
+    }
+
+    /**
+     * give a pixel, find pixel with smallest energy adjacent to it 
+     */
+    private  Axis getNextPixel(Axis current, Direction dir) {
+        int x = current.x, y = current.y;
+        double a = 0, b = 0, c = 0; 
+        if (dir == Direction.Vertical) {
+            if (y == height() - 1)  return current;
+            y++;
+            // three adjacent pixels
+            a = energies[y + 1][x    ];
+            b = energies[y + 1][x + 1];
+            c = energies[y + 1][x + 2];
+            System.out.println(String.format("Line %d : a-%.2f, b-%.2f, c-%.2f", y - 1, a, b, c));
+            x = (a > b) ? (b > c ? (x + 1) : x) : (c < a ? (x + 1) : (x - 1));
+        } else if (dir == Direction.Horizontal) {
+            if (x == width() - 1)  return current;
+            x++;
+            a = energies[y    ][x + 1];
+            b = energies[y + 1][x + 1];
+            c = energies[y + 2][x + 1];
+            y = (a > b) ? (b > c ? (y + 1) : y) : (c < a ? (y + 1) : (y - 1));
+        }
+        return new Axis(x, y);
+    }
+
+    /* public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
     {
         // recursively find shortest path
         int[] ans = null; 
@@ -103,13 +130,13 @@ public class SeamCarver {
         }
         return t;
     }
-    /**
+     *//**
      * @param dir       direction that seam goes
      * @param index     index of the ans array, same direction with seam
      * @param path      the row or col that we manage now
      * @param ans       the answer
      * @return          the answer
-     */
+     *//*
     private int[] findPath(Direction dir, int index, int path, int[] ans) {
         if ((dir == Direction.Vertical) && (index == height())) {
             for (int p = 0; p < height(); p++)  // get this path's length
@@ -137,7 +164,7 @@ public class SeamCarver {
             c = energies[path + 2][index + 1];
         }
         return (a > b) ? (b > c ? (path + 2) : (path + 1)) : (c < a ? (path + 2) : path);
-    }
+    }*/
     public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
     {
         validateArray(seam, Direction.Horizontal);
@@ -173,5 +200,40 @@ public class SeamCarver {
     }
     private enum Direction {
         Vertical, Horizontal;
+    }
+    private static class Axis {
+        int x;
+        int y;
+        public Axis(int mx, int my) {
+            this.x = mx;
+            this.y = my;
+        }
+        @Override
+        public String toString() {
+            return "(" + x + ", " + y + ")";
+        }
+    }
+    public static void main(String[] args) {
+        Picture pic = new Picture(args[0]);
+        SeamCarver seam = new SeamCarver(pic);
+        
+        System.out.println("seam's energies");
+        for (int i = 0; i < seam.height(); i++) {
+            for (int j = 0; j < seam.width(); j++) {
+                System.out.print(String.format("%.2f\t", seam.energies[i + 1][j + 1]));
+            }
+            System.out.println();
+        }
+        System.out.println("------------------------");
+        for (int i = 0; i < seam.height(); i++) {
+            for (int j = 0; j < seam.width(); j++) {
+                Axis start = new Axis(j, i);
+                Axis next = seam.getNextPixel(start, Direction.Vertical);
+//                System.out.println(String.format("%s's next smallest pixel is %s", start, next));
+                double ans = seam.energies[next.y + 1][next.x + 1];
+                System.out.println(String.format("\t%s's next smallest pixel is %.2f", start, ans));
+            }
+            System.out.println("------------------------");
+        }
     }
 }
