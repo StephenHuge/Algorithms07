@@ -1,8 +1,7 @@
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
 
-import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Picture;
 
 class TestSeam {
