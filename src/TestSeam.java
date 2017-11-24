@@ -14,15 +14,17 @@ class TestSeam {
                 "5X3.png",
                 "12X6.png",
                 "3X15.png",
-        "4X3.png"}; 
+                "4X3.png"}; 
 
-        for (String s : pics) {
+        /*for (String s : pics) {
             pic = new Picture("src/" + s);
             seam = new SeamCarver(pic);
             System.out.println(s + " : ");
             //            testFindHorizontalSeam();
-            testFindVerticalSeam();
-        }
+        }*/
+        pic = new Picture("src/" + "HJocean.png");
+        seam = new SeamCarver(pic);
+        testFindVerticalSeam();
     }
     @Test
     void testSeamCarver() {
@@ -69,8 +71,8 @@ class TestSeam {
             System.out.println();
         }*/
         int[] ans = seam.findHorizontalSeam();
-        double[][] energies = seam.energies;
-        SeamCarver.printHorizontalAns(ans, energies);
+//        double[][] energies = seam.energies;
+//        SeamCarver.printHorizontalAns(ans, energies);
     }
 
     @Test
@@ -84,8 +86,8 @@ class TestSeam {
              System.out.println();
          }*/
         int[] ans = seam.findVerticalSeam();
-        double[][] energies = seam.energies;
-        SeamCarver.printVerticalAns(ans, energies);
+//        double[][] energies = seam.energies;
+//        SeamCarver.printVerticalAns(ans, energies);
     }
 
     @Test
