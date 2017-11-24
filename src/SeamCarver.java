@@ -4,14 +4,23 @@ import edu.princeton.cs.algs4.Picture;
 
 public class SeamCarver {
 
+    private static final boolean HORIZONTAL = true;
+
+    private static final boolean VERTICAL = false;
+
+    private boolean picChanged = false;
+
     private Picture pic;
 
-    double[][] energies;
+    private double[][] energies;
 
     public SeamCarver(Picture picture)                // create a seam carver object based on the given picture
     {
         this.pic = picture;
-        energies = new double[picture.height() + 2][picture.width() + 2];   // (col + 2)* (row + 2)
+        getEnergies();
+    }
+    private void getEnergies() {
+        energies = new double[pic.height() + 2][pic.width() + 2];   // (col + 2)* (row + 2)
         for (int i = 0; i < energies.length; i++) {
             for (int j = 0; j < energies[0].length; j++) {
                 if ((i == 0 || i == energies.length) || (j == 0 || j == energies[0].length))
@@ -20,9 +29,11 @@ public class SeamCarver {
                     energies[i][j] = energy(j -1, i - 1);   
             }
         }
+        picChanged = false;
     }
     public Picture picture()                          // current picture
     {
+        if (picChanged) getEnergies();
         return pic;
     }
     public int width()                            // width of current picture
@@ -68,6 +79,7 @@ public class SeamCarver {
                 minEnergy = ans[ans.length - 1];
             }
         }
+        ans = trim(ans, ans.length - 1);
         return ans;
     }
     private void getHorizontalSeam(Axis current, int[] ans) {
@@ -88,7 +100,6 @@ public class SeamCarver {
         }
         getHorizontalSeam(new Axis(x, y), ans);  // recursively execute this method 
         return;
-
     }
     public int[] findVerticalSeam()                 // sequence of indices for vertical seam
     {
@@ -102,13 +113,21 @@ public class SeamCarver {
                 minEnergy = ans[ans.length - 1];
             }
         }
+        ans = trim(ans, ans.length - 1);
         return ans;
+    }
+    private int[] trim(int[] ans, int len) {
+        int[] t = new int[len];
+        for (int i = 0; i < len; i++) {
+            t[i] = ans[i];
+        }
+        return t;
     }
     private void getVerticalSeam(Axis current, int[] ans) {
         int x = current.x, y = current.y;               // current axis
         double a = 0, b = 0, c = 0;                     // three next pixels' energies
 
-        ans[y] = x;                                     // store the path   
+        ans[y] = x;                                     // store the path
         ans[ans.length - 1] += energies[y + 1][x + 1];  // save the energy of path
         if (y == height() - 1)   return;
         else {
@@ -124,7 +143,7 @@ public class SeamCarver {
         return;
 
     }
-    static void printHorizontalAns(int[] ans, double[][] energies) {
+    /*static void printHorizontalAns(int[] ans, double[][] energies) {
         String marker = " ";
         for (int i = 1; i < energies.length - 1; i++) {
             for (int j = 1; j < energies[0].length - 1; j++) {
@@ -134,12 +153,69 @@ public class SeamCarver {
             }
             System.out.println();
         }
-    }
+    }*/
     public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
     {
+        validateArray(seam, HORIZONTAL);
+        Picture newPic = new Picture(width(), height() - 1);
+        for (int i = 0; i < newPic.width(); i++) {
+            boolean gotton = false;         // whether we got the deleted pixel
+            for (int j = 0; j < newPic.height(); j++) {
+                if (seam[i] == j) {
+                    gotton = true;
+                    continue;
+                }  
+                if (!gotton) newPic.set(i, j, pic.get(i, j));
+                else         newPic.set(i, j - 1, pic.get(i, j));
+            }
+        }
+        pic = newPic;
+        picChanged = true;
+        getEnergies();
     }
     public void removeVerticalSeam(int[] seam)     // remove vertical seam from current picture
     {
+        validateArray(seam, VERTICAL);
+        Picture newPic = new Picture(width() - 1, height());
+        for (int i = 0; i < newPic.height(); i++) {
+            boolean gotton = false;         // whether we got the deleted pixel
+            for (int j = 0; j < newPic.width(); j++) {
+                if (seam[i] == j) {
+                    gotton = true;
+                    continue;
+                }  
+                if (!gotton) newPic.set(j, i, pic.get(j, i));
+                else         newPic.set(j - 1, i, pic.get(j, i));
+            }
+        }
+        pic = newPic;
+        picChanged = true;
+        getEnergies();
+    }
+    private void validateArray(int[] arr, boolean dir) {
+        if (arr == null)    throw new java.lang.IllegalArgumentException();
+        // for checking array's length and range of entries in array
+        int len = 0, range = 0;                  
+        if (dir == VERTICAL)          {
+            len = height();
+            range = width();
+        } else if (dir == HORIZONTAL) {
+            len = width();
+            range = height();
+        }
+        if ((arr.length != len) || (range <= 1))  // if range == 1, no more need to remove any pixels
+            throw new java.lang.IllegalArgumentException();
+        checkArrayContent(arr, range);
+    }
+    private void checkArrayContent(int[] arr, int range) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            if (Math.abs(arr[i] - arr[i + 1]) > 1)            // only adjacent vertex is allowed     
+                throw new java.lang.IllegalArgumentException();
+            if (arr[i] < 0 || arr[i] > range)            // check whether entry is in the range 
+                throw new java.lang.IllegalArgumentException(arr[i] + " is out of range");
+        }
+        int last = arr.length - 1;                     // in for loop, last array entry is not checked
+        if (arr[last] < 0 || arr[last] > range)        throw new java.lang.IllegalArgumentException();
     }
     private static class Axis {
         int x;
@@ -153,16 +229,16 @@ public class SeamCarver {
             return "(" + x + ", " + y + ")";
         }
     }
-    static void printVerticalAns(int[] ans, double[][] energies) {
+    /*static void printVerticalAns(int[] ans, double[][] energies) {
         String marker = " ";
         for (int i = 1; i < energies.length - 1; i++) {
             for (int j = 1; j < energies[0].length - 1; j++) {
                 if (ans[i - 1] == (j - 1)) marker = "*";
-                System.out.print(String.format("%.2f%s   ", energies[i][j], marker));
+                System.out.print(String.format("%.2f%s\t", energies[i][j], marker));
                 marker = " ";
             }
             System.out.println();
         }
 
-    }
+    }*/
 }
