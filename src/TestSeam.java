@@ -77,17 +77,19 @@ class TestSeam {
 
     @Test
     void testFindVerticalSeam() {
+        pic = new Picture("src/7x10.png");
+        seam = new SeamCarver(pic);
         System.out.println("seam's energies");
-        /* double[][] es = seam.energies;
+         double[][] es = seam.energies;
          for (int i = 1; i < es.length - 1; i++) {
              for (int j = 1; j < es[0].length - 1; j++) {
-                 System.out.print(String.format("%.2f\t", es[i][j]));
+                 System.out.print(String.format("%7.2f ", es[i][j]));
              }
              System.out.println();
-         }*/
+         }
         int[] ans = seam.findVerticalSeam();
-//        double[][] energies = seam.energies;
-//        SeamCarver.printVerticalAns(ans, energies);
+        double[][] energies = seam.energies;
+        printVerticalAns(ans, energies);
     }
 
     @Test
@@ -99,5 +101,29 @@ class TestSeam {
     void testRemoveVerticalSeam() {
         fail("Not yet implemented");
     }
+    
+    static void printVerticalAns(int[] ans, double[][] energies) {
+        System.out.println("-----------------------");
+        String marker = " ";
+        for (int i = 1; i < energies.length - 1; i++) {
+            for (int j = 1; j < energies[0].length - 1; j++) {
+                if (ans[i - 1] == (j - 1)) marker = "*";
+                System.out.print(String.format("%7.2f%s ", energies[i][j], marker));
+                marker = " ";
+            }
+            System.out.println();
+        }
+    }
 
+    static void printHorizontalAns(int[] ans, double[][] energies) {
+        String marker = " ";
+        for (int i = 1; i < energies.length - 1; i++) {
+            for (int j = 1; j < energies[0].length - 1; j++) {
+                if (ans[j - 1] == (i - 1)) marker = "*";
+                System.out.print(String.format("%.2f%s   ", energies[i][j], marker));
+                marker = " ";
+            }
+            System.out.println();
+        }
+    }
 }

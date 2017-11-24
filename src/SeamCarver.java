@@ -12,10 +12,11 @@ public class SeamCarver {
 
     private Picture pic;
 
-    private double[][] energies;
+    double[][] energies;
 
     public SeamCarver(Picture picture)                // create a seam carver object based on the given picture
     {
+        if (picture == null)    throw new java.lang.IllegalArgumentException("Picture can't be null");
         this.pic = picture;
         getEnergies();
     }
@@ -143,17 +144,6 @@ public class SeamCarver {
         return;
 
     }
-    /*static void printHorizontalAns(int[] ans, double[][] energies) {
-        String marker = " ";
-        for (int i = 1; i < energies.length - 1; i++) {
-            for (int j = 1; j < energies[0].length - 1; j++) {
-                if (ans[j - 1] == (i - 1)) marker = "*";
-                System.out.print(String.format("%.2f%s   ", energies[i][j], marker));
-                marker = " ";
-            }
-            System.out.println();
-        }
-    }*/
     public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
     {
         validateArray(seam, HORIZONTAL);
@@ -211,11 +201,11 @@ public class SeamCarver {
         for (int i = 0; i < arr.length - 1; i++) {
             if (Math.abs(arr[i] - arr[i + 1]) > 1)            // only adjacent vertex is allowed     
                 throw new java.lang.IllegalArgumentException();
-            if (arr[i] < 0 || arr[i] > range)            // check whether entry is in the range 
+            if (arr[i] < 0 || arr[i] >= range)            // check whether entry is in the range 
                 throw new java.lang.IllegalArgumentException(arr[i] + " is out of range");
         }
         int last = arr.length - 1;                     // in for loop, last array entry is not checked
-        if (arr[last] < 0 || arr[last] > range)        throw new java.lang.IllegalArgumentException();
+        if (arr[last] < 0 || arr[last] >= range)        throw new java.lang.IllegalArgumentException();
     }
     private static class Axis {
         int x;
@@ -229,16 +219,4 @@ public class SeamCarver {
             return "(" + x + ", " + y + ")";
         }
     }
-    /*static void printVerticalAns(int[] ans, double[][] energies) {
-        String marker = " ";
-        for (int i = 1; i < energies.length - 1; i++) {
-            for (int j = 1; j < energies[0].length - 1; j++) {
-                if (ans[i - 1] == (j - 1)) marker = "*";
-                System.out.print(String.format("%.2f%s\t", energies[i][j], marker));
-                marker = " ";
-            }
-            System.out.println();
-        }
-
-    }*/
 }
