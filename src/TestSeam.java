@@ -6,9 +6,25 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Picture;
 
 class TestSeam {
-    private static Picture pic = new Picture("src/5X3.png");
-    private static SeamCarver seam = new SeamCarver(pic);
-    
+
+    private static Picture pic ;
+    private static SeamCarver seam;
+    @Test
+    void tests() {
+        String[] pics = {"5X5.png", 
+                "5X3.png",
+                "12X6.png",
+                "3X15.png",
+        "4X3.png"}; 
+
+        for (String s : pics) {
+            pic = new Picture("src/" + s);
+            seam = new SeamCarver(pic);
+            System.out.println(s + " : ");
+            //            testFindHorizontalSeam();
+            testFindVerticalSeam();
+        }
+    }
     @Test
     void testSeamCarver() {
         /*System.out.println("seam's energies");
@@ -45,12 +61,32 @@ class TestSeam {
 
     @Test
     void testFindHorizontalSeam() {
-        fail("Not yet implemented");
+        System.out.println("seam's energies");
+        /* double[][] es = seam.energies;
+        for (int i = 1; i < es.length - 1; i++) {
+            for (int j = 1; j < es[0].length - 1; j++) {
+                System.out.print(String.format("%.2f\t", es[i][j]));
+            }
+            System.out.println();
+        }*/
+        int[] ans = seam.findHorizontalSeam();
+        double[][] energies = seam.energies;
+        SeamCarver.printHorizontalAns(ans, energies);
     }
 
     @Test
     void testFindVerticalSeam() {
-        fail("Not yet implemented");
+        System.out.println("seam's energies");
+        /* double[][] es = seam.energies;
+         for (int i = 1; i < es.length - 1; i++) {
+             for (int j = 1; j < es[0].length - 1; j++) {
+                 System.out.print(String.format("%.2f\t", es[i][j]));
+             }
+             System.out.println();
+         }*/
+        int[] ans = seam.findVerticalSeam();
+        double[][] energies = seam.energies;
+        SeamCarver.printVerticalAns(ans, energies);
     }
 
     @Test
