@@ -94,7 +94,7 @@ public class SeamCarver {
         ans[ans.length - 1] += energies[y + 1][x + 1];  // save the energy of path
         if (x == width() - 1)   return;
         else {
-            x++;
+            x++;    
             // get next three pixels' energies
             a = energies[y    ][x + 1];         
             b = energies[y + 1][x + 1];
@@ -222,6 +222,7 @@ public class SeamCarver {
             return "(" + x + ", " + y + ")";
         }
     }
+    
     public static void main(String[] args) {
         Picture pic = new Picture(args[0]);
         SeamCarver sc = new SeamCarver(pic);
