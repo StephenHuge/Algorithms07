@@ -1,6 +1,7 @@
 import java.awt.Color;
 
 import edu.princeton.cs.algs4.Picture;
+import edu.princeton.cs.algs4.StdOut;
 
 public class SeamCarver {
 
@@ -24,7 +25,7 @@ public class SeamCarver {
         energies = new double[pic.height() + 2][pic.width() + 2];   // (col + 2)* (row + 2)
         for (int i = 0; i < energies.length; i++) {
             for (int j = 0; j < energies[0].length; j++) {
-                if ((i == 0 || i == energies.length) || (j == 0 || j == energies[0].length))
+                if ((i == 0 || i == energies.length - 1) || (j == 0 || j == energies[0].length - 1))
                     energies[i][j] = 2000;
                 else 
                     energies[i][j] = energy(j -1, i - 1);   
@@ -47,7 +48,9 @@ public class SeamCarver {
     }
     public double energy(int x, int y)               // energy of pixel at column x and row y
     {
-        if ((x == 0 || x >= width() - 1) || (y == 0 || y >= height() - 1))    
+        if ((x < 0 || x > width()) || (y < 0 || y > height()) )
+            throw new java.lang.IllegalArgumentException("Illegal x and y");
+        if ((x == 0 || x == width() - 1) || (y == 0 || y == height() - 1))    
             return 1000.0;
         Color up    = pic.get(x - 1, y);
         Color down  = pic.get(x + 1, y);
@@ -217,6 +220,17 @@ public class SeamCarver {
         @Override
         public String toString() {
             return "(" + x + ", " + y + ")";
+        }
+    }
+    public static void main(String[] args) {
+        Picture pic = new Picture(args[0]);
+        SeamCarver sc = new SeamCarver(pic);
+        
+        StdOut.printf("Printing energy calculated for each pixel.\n");
+        for (int i = 0; i < sc.energies.length; i++) {
+            for (int j = 0; j < sc.energies[0].length; j++) 
+                StdOut.printf("%9.0f ", sc.energies[i][j]);
+            StdOut.println();
         }
     }
 }
