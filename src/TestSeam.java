@@ -3,6 +3,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 
 import edu.princeton.cs.algs4.Picture;
+import edu.princeton.cs.algs4.StdOut;
 
 class TestSeam {
 
@@ -57,7 +58,25 @@ class TestSeam {
 
     @Test
     void testEnergy() {
-        fail("Not yet implemented");
+        Picture picture = new Picture("src/7x10.png");
+        StdOut.printf("image is %d pixels wide by %d pixels high.\n", picture.width(), picture.height());
+        
+//        SeamCarver sc = new SeamCarver(picture);
+        SeamCarverWithOuterPixel sc = new SeamCarverWithOuterPixel(picture);
+        
+        StdOut.printf("Printing energy calculated for each pixel.\n");        
+
+        for (int row = 0; row < sc.height(); row++) {
+            for (int col = 0; col < sc.width(); col++)
+                StdOut.printf("%9.2f ", sc.pixels[row][col].energy());
+            StdOut.println();
+        }
+        System.out.println("-----------------------------------------");
+        for (int row = 0; row < sc.height(); row++) {
+            for (int col = 0; col < sc.width(); col++)
+                StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
+            StdOut.println();
+        }
     }
 
     @Test
@@ -77,7 +96,7 @@ class TestSeam {
 
     @Test
     void testFindVerticalSeam() {
-        pic = new Picture("src/7x10.png");
+        /*pic = new Picture("src/7x10.png");
         seam = new SeamCarver(pic);
         System.out.println("seam's energies");
          double[][] es = seam.energies;
@@ -89,7 +108,7 @@ class TestSeam {
          }
         int[] ans = seam.findVerticalSeam();
         double[][] energies = seam.energies;
-        printVerticalAns(ans, energies);
+        printVerticalAns(ans, energies);*/
     }
 
     @Test
