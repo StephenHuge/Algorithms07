@@ -66,7 +66,7 @@ class TestSeam {
         
         StdOut.printf("Printing energy calculated for each pixel.\n");        
 
-        for (int row = 0; row < sc.height(); row++) {
+        /*for (int row = 0; row < sc.height(); row++) {
             for (int col = 0; col < sc.width(); col++)
                 StdOut.printf("%9.2f ", sc.pixels[row][col].energy());
             StdOut.println();
@@ -77,7 +77,7 @@ class TestSeam {
             for (int col = 0; col < sc.width(); col++)
                 StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
             StdOut.println();
-        }
+        }*/
     }
 
     @Test
