@@ -1,11 +1,11 @@
 public class Pixel implements Comparable<Pixel> {
     private int col, row;
     
-    private double energy;
+    private double energy;                          // each pixel's energy
     
-    private double distance = Double.POSITIVE_INFINITY;
+    private double distance = Double.POSITIVE_INFINITY;     // initial distance is infinity
     
-    private Pixel father = null;
+    private Pixel father = null;                            // for searching back the path
     
     public Pixel(int col, int row, double energy) {
         this.col = col;
@@ -62,7 +62,8 @@ public class Pixel implements Comparable<Pixel> {
 
     @Override
     public String toString() {
-        return "(" + col + ", " + row + ") -> E : " + energy + " -> D : " + distance + "- > F : "
+        return "(" + col + ", " + row + ") -> Energy : " + energy + 
+                "\n\t-> Dist : " + distance + "\n\t- > Father : "
                 + father;
     }
     
