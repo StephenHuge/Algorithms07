@@ -62,7 +62,7 @@ class TestSeam {
         StdOut.printf("image is %d pixels wide by %d pixels high.\n", picture.width(), picture.height());
         
 //        SeamCarver sc = new SeamCarver(picture);
-        SeamCarverWithOuterPixel sc = new SeamCarverWithOuterPixel(picture);
+        SeamCarver sc = new SeamCarver(picture);
         
         StdOut.printf("Printing energy calculated for each pixel.\n");        
 
@@ -72,6 +72,7 @@ class TestSeam {
             StdOut.println();
         }
         System.out.println("-----------------------------------------");
+        StdOut.printf("Printing distance calculated for each pixel.\n");
         for (int row = 0; row < sc.height(); row++) {
             for (int col = 0; col < sc.width(); col++)
                 StdOut.printf("%9.2f ", sc.pixels[row][col].dist());

@@ -7,26 +7,34 @@ import edu.princeton.cs.algs4.StdOut;
 /**
  * default iterate order of array is row -> col when direction is vertical, col -> row when horizontal
  */
-public class SeamCarverWithOuterPixel {
-    
-    private static final boolean HORIZONTAL = true;
+public class SeamCarver {
 
-    private static final boolean VERTICAL = false;
+    private static final boolean HORIZONTAL = false;
 
-     Pixel[][] pixels;
+    private static final boolean VERTICAL = true;
+
+    Pixel[][] pixels;
 
     private IndexMinPQ<Pixel> minPQ;
 
     private Picture pic;
 
-    public SeamCarverWithOuterPixel(Picture picture)                // create a seam carver object based on the given picture
+    private int[] verticalAns;
+
+    private int[] horizontalAns;
+
+    public SeamCarver(Picture picture)                // create a seam carver object based on the given picture
     {
         if (picture == null)    throw new java.lang.IllegalArgumentException("Illegal picture");
         this.pic = picture;
-        init(pic);
-        getSP();        // get shortest path
+        init(pic, VERTICAL);
+        Pixel ansV = getSP(VERTICAL);        // get shortest path
+        verticalAns = getVerticalAns(ansV);
+        init(pic, HORIZONTAL);
+        Pixel ansH = getSP(HORIZONTAL);        // get shortest path
+                horizontalAns = getHorizontalAns(ansH);
     }
-    private void init(Picture picture) {
+    private void init(Picture picture, boolean direction) {
         int w = picture.width();
         int h = picture.height();
         pixels = new Pixel[h][w];
@@ -35,41 +43,64 @@ public class SeamCarverWithOuterPixel {
         for (int i = 0; i < pixels.length; i++)          // height of pixels (row)
             for (int j = 0; j < pixels[0].length; j++)   // width of pixels  (col)
                 pixels[i][j] = new Pixel(j, i, energy(j, i)); 
-        
-        for (int j = 0; j < pixels[0].length; j++) {
-            pixels[0][j].setDistance(1000.0);           // initialize the first row
-            Pixel son = pixels[1][j];
-            son.setDistance(1000.0 + son.energy());
-            if (j == 0)     son.setFather(pixels[0][j]); 
-            else            son.setFather(pixels[0][j - 1]);
+
+        if (direction == VERTICAL) {
+            for (int j = 0; j < pixels[0].length; j++) {
+                Pixel son = pixels[1][j];
+                son.setDistance(1000.0 + son.energy());
+                if (j == 0)     son.setFather(pixels[0][j]); 
+                else            son.setFather(pixels[0][j - 1]);
+            }
+        } else if (direction == HORIZONTAL) {
+            for (int j = 0; j < pixels.length; j++) {
+                Pixel son = pixels[j][1];
+                son.setDistance(1000.0 + son.energy());
+                if (j == 0)     son.setFather(pixels[j][0]); 
+                else            son.setFather(pixels[j - 1][0]);
+            }
         }
     }
     /**
      * get shortest path from top to bottom by modifying energyTo and edgeTo
+     * @param horizontal2 
      */
-    private void getSP() {
-        for (int i = 0; i < pixels.length; i++) {         
-            for (int j = 0; j < pixels[0].length; j++) {
-                Pixel p = pixels[i][j];
-                minPQ.insert(i * width() + j, p);           // insert first row
-            }
-            while (!minPQ.isEmpty()) {
-                Pixel p = minPQ.minKey();
-                minPQ.delMin();
-                Pixel[] neighbors = neighbors(p, VERTICAL);
-                if (neighbors == null)  continue;
-                for (Pixel n : neighbors)
-                    if (n != null)  relax(p, n);     
-            }
+    private Pixel getSP(boolean direction) {
+        int len = 0;
+        int second = 0;
+        if (direction == VERTICAL) {
+            len = pixels[0].length;
+            second = width();
+        } else if (direction == HORIZONTAL) {
+            len = pixels.length;
+            second = height();
         }
+        //        for (int j = 0; j < pixels[0].length; j++) {
+        for (int j = 0; j < len; j++) {
+            Pixel p = direction ? pixels[1][j] : pixels[j][1];
+            //            minPQ.insert(width() + j, p);           // insert second row
+            minPQ.insert(second + j, p);           // insert second row
+        }
+        while (!minPQ.isEmpty()) {
+            Pixel p = minPQ.minKey();
+            minPQ.delMin();
+            Pixel[] neighbors = neighbors(p, VERTICAL);
+            if (neighbors == null)  return p;
+            for (Pixel n : neighbors)
+                if (n != null)  relax(p, n, direction);     
+        }
+        return null;
     }
-    private void relax(Pixel pixel, Pixel neighbor) {
-        if (neighbor.dist() > pixel.energy() + pixel.dist()) {
-//            System.out.println("releax : " + neighbor);
-            neighbor.setDistance(pixel.energy() + pixel.dist());
+    private void relax(Pixel pixel, Pixel neighbor, boolean direction) {
+        if (neighbor.dist() > neighbor.energy() + pixel.dist()) {
+            //            System.out.printf("Pixel :    %s -- %.2f\n", pixel, pixel.dist());
+            //            System.out.printf("Neighbor : %s -- %.2f\n", neighbor, neighbor.dist());
+            neighbor.setDistance(neighbor.energy() + pixel.dist());
+            //            System.out.printf("releax     %s's neighbor : %s, energy to %.2f\n",
+            //                    pixel, neighbor, neighbor.dist());
             neighbor.setFather(pixel);
-            int key = neighbor.row() * width() + neighbor.col();
-            
+            int key = direction ? neighbor.row() * width() + neighbor.col() :
+                neighbor.col() * height() + neighbor.row();
+
             if (minPQ.contains(key))     minPQ.changeKey(key, neighbor);    // update value in minPQ
             else                         minPQ.insert(key, neighbor);
         }
@@ -88,13 +119,40 @@ public class SeamCarverWithOuterPixel {
             else                            left = pixels[p.row() + 1][p.col() - 1];
             if (p.col() == width() - 1)     right = null;
             else                            right = pixels[p.row() + 1][p.col() + 1];
-            
+
             down =  pixels[p.row() + 1][p.col()];
             return new Pixel[] { left, down, right};
         } else {
-            // TODO
-            return null;
+            if (p.col() == width() - 1)    return null;
+            Pixel up, right, down;
+            if (p.row() == 0)               up = null;
+            else                            up = pixels[p.row() - 1][p.col() + 1];
+            if (p.row() == height() - 1)    down = null;
+            else                            down = pixels[p.row() + 1][p.col() + 1];
+
+            right =  pixels[p.row()][p.col() + 1];
+            return new Pixel[] { up, right, down};
         }
+    }
+    private int[] getVerticalAns(Pixel p) {
+        if (p == null)  throw new java.lang.IllegalArgumentException();
+        int[] ans = new int[height()];
+        int pivot = height() - 1;
+        while (p != null) {
+            ans[pivot--] = p.col();
+            p = p.father();
+        }
+        return ans;
+    }
+    private int[] getHorizontalAns(Pixel p) {
+        if (p == null)  throw new java.lang.IllegalArgumentException();
+        int[] ans = new int[width()];
+        int pivot = width() - 1;
+        while (p != null) {
+            ans[pivot--] = p.row();
+            p = p.father();
+        }
+        return ans;
     }
     public Picture picture()                          // current picture
     {
@@ -134,11 +192,11 @@ public class SeamCarverWithOuterPixel {
     }
     public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
     {
-        return null;
+        return horizontalAns;
     }
     public int[] findVerticalSeam()                 // sequence of indices for vertical seam
     {
-        return null;
+        return verticalAns;
     }
     public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
     {
@@ -146,14 +204,14 @@ public class SeamCarverWithOuterPixel {
     public void removeVerticalSeam(int[] seam)     // remove vertical seam from current picture
     {
     }
-    
+
     public static void main(String[] args) {
         Picture picture = new Picture("src/7x10.png");
         StdOut.printf("image is %d pixels wide by %d pixels high.\n", picture.width(), picture.height());
-        
-//        SeamCarver sc = new SeamCarver(picture);
-        SeamCarverWithOuterPixel sc = new SeamCarverWithOuterPixel(picture);
-        
+
+        //        SeamCarver sc = new SeamCarver(picture);
+        SeamCarver sc = new SeamCarver(picture);
+
         /***********************************************************
          * test energy() 
          ************************************************************/
@@ -173,14 +231,12 @@ public class SeamCarverWithOuterPixel {
                 StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
             StdOut.println();
         }
-        
-        
-        
+
         System.out.println("-----------------------------------------");
         StdOut.printf("Printing distance calculated for each pixel.\n");
         for (int row = 0; row < sc.height(); row++) {
             for (int col = 0; col < sc.width(); col++)
-                StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
+                StdOut.print(sc.pixels[row][col].father() + "\t");
             StdOut.println();
         }
     }

@@ -62,9 +62,12 @@ public class Pixel implements Comparable<Pixel> {
 
     @Override
     public String toString() {
-        return father + " \t-> (" + col + ", " + row + ") " + 
+        /*return father + " \t-> (" + col + ", " + row + ") " + 
                 " \te : " + energy + 
-                " \td : " + distance + "\n";
+                " \td : " + distance + "\n";*/
+        return "(" + col + ", " + row + ") "; 
+//                + " \te : " + energy 
+//                + " \td : " + distance + "\n";
     }
     
 }
