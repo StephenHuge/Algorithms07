@@ -31,14 +31,12 @@ public class SeamCarverWithOuterPixel {
         pixels = new Pixel[h][w];
         minPQ    = new IndexMinPQ<>(h * w);
 
-        for (int i = 0; i < pixels.length; i++) {         // height of pixels (row)
-            for (int j = 0; j < pixels[0].length; j++) {  // width of pixels  (col)
-                pixels[i][j] = new Pixel(j, i, energy(j, i));              
-            }
-        }
-        for (int j = 0; j < pixels[0].length; j++) {
-            pixels[0][j].setDistance(1000.0);
-        }
+        for (int i = 0; i < pixels.length; i++)          // height of pixels (row)
+            for (int j = 0; j < pixels[0].length; j++)   // width of pixels  (col)
+                pixels[i][j] = new Pixel(j, i, energy(j, i)); 
+        
+        for (int j = 0; j < pixels[0].length; j++) 
+            pixels[0][j].setDistance(1000.0);           // initialize the first row
     }
     /**
      * get shortest path from top to bottom by modifying energyTo and edgeTo
@@ -47,7 +45,7 @@ public class SeamCarverWithOuterPixel {
         for (int i = 0; i < pixels.length; i++) {         
             for (int j = 0; j < pixels[0].length; j++) {
                 Pixel p = pixels[i][j];
-                minPQ.insert(i * width() + j, p);
+                minPQ.insert(i * width() + j, p);           // insert first row
             }
             while (!minPQ.isEmpty()) {
                 Pixel p = minPQ.minKey();
@@ -55,20 +53,27 @@ public class SeamCarverWithOuterPixel {
                 Pixel[] neighbors = neighbors(p, VERTICAL);
                 if (neighbors == null)  continue;
                 for (Pixel n : neighbors)
-                    if (n != null)  relax(p, n);
+                    if (n != null)  relax(p, n);     
             }
         }
     }
-    private void relax(Pixel p, Pixel n) {
-        if (n.dist() > p.energy() + p.dist()) {
-//            System.out.println("releax : " + n);
-            n.setDistance(p.energy() + p.dist());
-            n.setFather(p);
-            if (minPQ.contains(n.row() * width() + n.col()))    
-                minPQ.changeKey(n.row() * width() + n.col(), n);
-            else minPQ.insert(n.row() * width() + n.col(), n);
+    private void relax(Pixel pixel, Pixel neighbor) {
+        if (neighbor.dist() > pixel.energy() + pixel.dist()) {
+//            System.out.println("releax : " + neighbor);
+            neighbor.setDistance(pixel.energy() + pixel.dist());
+            neighbor.setFather(pixel);
+            int key = neighbor.row() * width() + neighbor.col();
+            
+            if (minPQ.contains(key))     minPQ.changeKey(key, neighbor);    // update value in minPQ
+            else                         minPQ.insert(key, neighbor);
         }
     }
+    /**
+     * get three p's neighbors
+     * @param p
+     * @param direction
+     * @return
+     */
     private Pixel[] neighbors(Pixel p, boolean direction) {
         if (direction == VERTICAL) {
             if (p.row() == height() - 1)    return null;
