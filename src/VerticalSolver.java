@@ -12,11 +12,43 @@ import edu.princeton.cs.algs4.StdOut;
  * 3. refresh() : refresh this picture, return a modified one  
  */
 public class VerticalSolver {
-    public int[] solve(Picture pic) {
+    
+    private IndexMinPQ<Pixel> minPQ;
+    
+    private Pixel[][] pixels;
+    
+    private int h;
+    
+    private int w;
+    
+    public VerticalSolver(Pixel[][] ps) {
+        this.h = ps.length;
+        this.w = ps[0].length; 
+        pixels = copy(ps);
+        minPQ = new IndexMinPQ<>(h * w);
+        
+        for (int j = 0; j < pixels[0].length; j++) {
+            pixels[0][j].setDistance(1000.0);           // initialize the first row
+            Pixel son = pixels[1][j];
+            son.setDistance(1000.0 + son.energy());
+            if (j == 0)     son.setFather(pixels[0][j]); 
+            else            son.setFather(pixels[0][j - 1]);
+        }
+    }
+    
+    private Pixel[][] copy(Pixel[][] ps) {
+        Pixel[][] ans = new Pixel[h][w];
+        for (int i = 0; i < ps.length; i++) 
+            for (int j = 0; j < ps[0].length; j++) 
+                ans[i][j] = ps[i][j];
+        return ans;
+    }
+
+    public int[] solve(Pixel[][] pixels) {
         // TODO
         return null;
     }
-    public void remove() {
+    public void remove(int[] seam) {
         // TODO        
     } 
     public Picture refresh() {

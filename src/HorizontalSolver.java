@@ -8,11 +8,14 @@ import edu.princeton.cs.algs4.Picture;
  * 3. refresh() : refresh this picture, return a modified one  
  */
 public class HorizontalSolver {
-    public int[] solve(Picture pic) {
+    public HorizontalSolver(Pixel[][] pixels) {
+        // TODO Auto-generated constructor stub
+    }
+    public int[] solve(Pixel[][] pixels) {
         // TODO
         return null;
     }
-    public void remove() {
+    public void remove(int[] seam) {
         // TODO        
     } 
     public Picture refresh() {
