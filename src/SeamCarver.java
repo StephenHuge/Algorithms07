@@ -1,22 +1,25 @@
+import java.awt.Color;
+
 import edu.princeton.cs.algs4.IndexMinPQ;
 import edu.princeton.cs.algs4.Picture;
+import edu.princeton.cs.algs4.StdOut;
 
 /**
  * default iterate order of array is row -> col when direction is vertical, col -> row when horizontal
  */
-public class SeamCarver {
+public class SeamCarverWithOuterPixel {
+    
+    private static final boolean HORIZONTAL = true;
 
-    private double[][] energies;
+    private static final boolean VERTICAL = false;
 
-    private double[][] energyTo;
-
-    private int[][] edgeTo;
+     Pixel[][] pixels;
 
     private IndexMinPQ<Pixel> minPQ;
 
     private Picture pic;
 
-    public SeamCarver(Picture picture)                // create a seam carver object based on the given picture
+    public SeamCarverWithOuterPixel(Picture picture)                // create a seam carver object based on the given picture
     {
         if (picture == null)    throw new java.lang.IllegalArgumentException("Illegal picture");
         this.pic = picture;
@@ -24,69 +27,110 @@ public class SeamCarver {
         getSP();        // get shortest path
     }
     private void init(Picture picture) {
-        int w = picture.width(), h = picture.height() + 2;
-        energies = new double[h + 2][w + 2];
-        energyTo = new double[h][w];
-        edgeTo   = new int[h][w];
+        int w = picture.width();
+        int h = picture.height();
+        pixels = new Pixel[h][w];
         minPQ    = new IndexMinPQ<>(h * w);
 
-        for (int i = 0; i < energies.length; i++) {         // height of energies
-            for (int j = 0; j < energies[0].length; j++) {  // width of energies
-                energies[i][j] = energy(i, j);              // get energies of every pixel in the picture
-            }
-        }
-        for (int i = 0; i < energyTo.length; i++) {
-            for (int j = 0; j < energyTo[0].length; j++) {
-                if (i == 0) {
-                    energyTo[i][j] = 1000.0;
-                    edgeTo[i][j]   = 0;                        
-                } else {
-                    energyTo[i][j] = Double.POSITIVE_INFINITY;  // default energyTo is positive infinity
-                    edgeTo[i][j]   = -1;                        // default energyTo is -1, means no path available
-                }
-            }
+        for (int i = 0; i < pixels.length; i++)          // height of pixels (row)
+            for (int j = 0; j < pixels[0].length; j++)   // width of pixels  (col)
+                pixels[i][j] = new Pixel(j, i, energy(j, i)); 
+        
+        for (int j = 0; j < pixels[0].length; j++) {
+            pixels[0][j].setDistance(1000.0);           // initialize the first row
+            Pixel son = pixels[1][j];
+            son.setDistance(1000.0 + son.energy());
+            if (j == 0)     son.setFather(pixels[0][j]); 
+            else            son.setFather(pixels[0][j - 1]);
         }
     }
     /**
      * get shortest path from top to bottom by modifying energyTo and edgeTo
      */
     private void getSP() {
-        for (int i = 0; i < energyTo.length; i++) {
-            for (int j = 0; j < energyTo[0].length; j++) {
-                Pixel[] neighbors = neighbors(i, j);
-                for (Pixel p : neighbors)
-                    relax(i, j, p);
+        for (int i = 0; i < pixels.length; i++) {         
+            for (int j = 0; j < pixels[0].length; j++) {
+                Pixel p = pixels[i][j];
+                minPQ.insert(i * width() + j, p);           // insert first row
+            }
+            while (!minPQ.isEmpty()) {
+                Pixel p = minPQ.minKey();
+                minPQ.delMin();
+                Pixel[] neighbors = neighbors(p, VERTICAL);
+                if (neighbors == null)  continue;
+                for (Pixel n : neighbors)
+                    if (n != null)  relax(p, n);     
             }
         }
     }
-    private void relax(int i, int j, Pixel p) {
-        if (energyTo[p.row()][p.col()] > energyTo[i][j] + p.dist()) {
-            energyTo[p.row()][p.col()] = energyTo[i][j] + p.dist();
-//            edgeTo[p.row()][p.col()] = 
+    private void relax(Pixel pixel, Pixel neighbor) {
+        if (neighbor.dist() > pixel.energy() + pixel.dist()) {
+//            System.out.println("releax : " + neighbor);
+            neighbor.setDistance(pixel.energy() + pixel.dist());
+            neighbor.setFather(pixel);
+            int key = neighbor.row() * width() + neighbor.col();
+            
+            if (minPQ.contains(key))     minPQ.changeKey(key, neighbor);    // update value in minPQ
+            else                         minPQ.insert(key, neighbor);
         }
     }
-    private Pixel[] neighbors(int i, int j) {
-        if (i == height())      return null;
-        return  new Pixel[] {
-                new Pixel(j - 1, i + 1, energies[i + 1][j - 1]), 
-                new Pixel(j    , i + 1, energies[i + 1][j    ]),
-                new Pixel(j + 1, i + 1, energies[i + 1][j + 1])}; 
+    /**
+     * get three p's neighbors
+     * @param p
+     * @param direction
+     * @return
+     */
+    private Pixel[] neighbors(Pixel p, boolean direction) {
+        if (direction == VERTICAL) {
+            if (p.row() == height() - 1)    return null;
+            Pixel left, down, right;
+            if (p.col() == 0)               left = null;
+            else                            left = pixels[p.row() + 1][p.col() - 1];
+            if (p.col() == width() - 1)     right = null;
+            else                            right = pixels[p.row() + 1][p.col() + 1];
+            
+            down =  pixels[p.row() + 1][p.col()];
+            return new Pixel[] { left, down, right};
+        } else {
+            // TODO
+            return null;
+        }
     }
     public Picture picture()                          // current picture
     {
-        return null;
+        return this.pic;
     }
     public int width()                            // width of current picture
     {
-        return -1;
+        return this.pic.width();
     }
     public int height()                           // height of current picture
     {
-        return -1;
+        return this.pic.height();
     }
     public double energy(int x, int y)               // energy of pixel at column x and row y
     {
-        return -1;
+        if ((x < 0 || x > width()) || (y < 0 || y > height()) )
+            throw new java.lang.IllegalArgumentException("Illegal x and y");
+        if ((x == 0 || x == width() - 1) || (y == 0 || y == height() - 1))    
+            return 1000.0;
+        Color up    = pic.get(x - 1, y);
+        Color down  = pic.get(x + 1, y);
+        Color right = pic.get(x, y + 1);            // get (col, row + 1)
+        Color left  = pic.get(x, y - 1);
+
+        double dx = square(right.getBlue() - left.getBlue())
+                + square(right.getGreen() - left.getGreen())
+                + square(right.getRed() - left.getRed());
+        double dy = square(up.getBlue() - down.getBlue())
+                + square(up.getGreen() - down.getGreen())
+                + square(up.getRed() - down.getRed());
+
+        double ans = Math.sqrt(dx + dy);
+        return ans;
+    }
+    private double square(int i) {
+        return i * i;
     }
     public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
     {
@@ -102,41 +146,42 @@ public class SeamCarver {
     public void removeVerticalSeam(int[] seam)     // remove vertical seam from current picture
     {
     }
-    private static class Pixel implements Comparable<Pixel> {
-        private int row, col;
-        private double distance;
-
-        public Pixel(int col, int row, double distance) {
-            this.col = col;
-            this.row = row;
-            this.distance = distance;
-        }
-        public int row() {
-            return row;
-        }
-        public void setRow(int row) {
-            this.row = row;
-        }
-        public int col() {
-            return col;
-        }
-        public void setCol(int col) {
-            this.col = col;
-        }
-        public double dist() {
-            return distance;
-        }
-        public void setDistance(double distance) {
-            this.distance = distance;
-        }
-        @Override
-        public int compareTo(Pixel p) {
-            if (this.dist() - p.dist() < 0) return -1;
-            if (this.dist() - p.dist() > 0) return 1;
-            else                            return 0;
-        }
-    }
+    
     public static void main(String[] args) {
-    }
+        Picture picture = new Picture("src/7x10.png");
+        StdOut.printf("image is %d pixels wide by %d pixels high.\n", picture.width(), picture.height());
+        
+//        SeamCarver sc = new SeamCarver(picture);
+        SeamCarverWithOuterPixel sc = new SeamCarverWithOuterPixel(picture);
+        
+        /***********************************************************
+         * test energy() 
+         ************************************************************/
+        StdOut.printf("Printing energy calculated for each pixel.\n");        
 
+        for (int row = 0; row < sc.height(); row++) {
+            for (int col = 0; col < sc.width(); col++)
+                StdOut.printf("%9.2f ", sc.pixels[row][col].energy());
+            StdOut.println();
+        }
+        System.out.println("-----------------------------------------");
+        /***********************************************************
+         * test init() 
+         ************************************************************/
+        for (int row = 0; row < sc.height(); row++) {
+            for (int col = 0; col < sc.width(); col++)
+                StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
+            StdOut.println();
+        }
+        
+        
+        
+        System.out.println("-----------------------------------------");
+        StdOut.printf("Printing distance calculated for each pixel.\n");
+        for (int row = 0; row < sc.height(); row++) {
+            for (int col = 0; col < sc.width(); col++)
+                StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
+            StdOut.println();
+        }
+    }
 }
