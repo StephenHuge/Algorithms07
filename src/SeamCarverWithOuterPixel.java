@@ -2,6 +2,7 @@ import java.awt.Color;
 
 import edu.princeton.cs.algs4.IndexMinPQ;
 import edu.princeton.cs.algs4.Picture;
+import edu.princeton.cs.algs4.StdOut;
 
 /**
  * default iterate order of array is row -> col when direction is vertical, col -> row when horizontal
@@ -35,8 +36,13 @@ public class SeamCarverWithOuterPixel {
             for (int j = 0; j < pixels[0].length; j++)   // width of pixels  (col)
                 pixels[i][j] = new Pixel(j, i, energy(j, i)); 
         
-        for (int j = 0; j < pixels[0].length; j++) 
+        for (int j = 0; j < pixels[0].length; j++) {
             pixels[0][j].setDistance(1000.0);           // initialize the first row
+            Pixel son = pixels[1][j];
+            son.setDistance(1000.0 + son.energy());
+            if (j == 0)     son.setFather(pixels[0][j]); 
+            else            son.setFather(pixels[0][j - 1]);
+        }
     }
     /**
      * get shortest path from top to bottom by modifying energyTo and edgeTo
@@ -139,5 +145,43 @@ public class SeamCarverWithOuterPixel {
     }
     public void removeVerticalSeam(int[] seam)     // remove vertical seam from current picture
     {
+    }
+    
+    public static void main(String[] args) {
+        Picture picture = new Picture("src/7x10.png");
+        StdOut.printf("image is %d pixels wide by %d pixels high.\n", picture.width(), picture.height());
+        
+//        SeamCarver sc = new SeamCarver(picture);
+        SeamCarverWithOuterPixel sc = new SeamCarverWithOuterPixel(picture);
+        
+        /***********************************************************
+         * test energy() 
+         ************************************************************/
+        StdOut.printf("Printing energy calculated for each pixel.\n");        
+
+        for (int row = 0; row < sc.height(); row++) {
+            for (int col = 0; col < sc.width(); col++)
+                StdOut.printf("%9.2f ", sc.pixels[row][col].energy());
+            StdOut.println();
+        }
+        System.out.println("-----------------------------------------");
+        /***********************************************************
+         * test init() 
+         ************************************************************/
+        for (int row = 0; row < sc.height(); row++) {
+            for (int col = 0; col < sc.width(); col++)
+                StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
+            StdOut.println();
+        }
+        
+        
+        
+        System.out.println("-----------------------------------------");
+        StdOut.printf("Printing distance calculated for each pixel.\n");
+        for (int row = 0; row < sc.height(); row++) {
+            for (int col = 0; col < sc.width(); col++)
+                StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
+            StdOut.println();
+        }
     }
 }
