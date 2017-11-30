@@ -1,3 +1,4 @@
+package my.graph.test;
 import edu.princeton.cs.algs4.Picture;
 
 /**

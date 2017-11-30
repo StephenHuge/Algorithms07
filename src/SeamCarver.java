@@ -73,11 +73,11 @@ public class SeamCarver {
     }
     public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
     {
-        return hs.solve(pixels);
+        return hs.solve();
     }
     public int[] findVerticalSeam()                 // sequence of indices for vertical seam
     {
-        return vs.solve(pixels);
+        return vs.solve();
     }
     public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
     {
@@ -86,8 +86,9 @@ public class SeamCarver {
     }
     public void removeVerticalSeam(int[] seam)     // remove vertical seam from current picture
     {
-        vs.remove(seam);
-        vs.refresh();
+        vs.remove(seam, pic);
+        pic = vs.refresh();
+        width--;
     }
 
     public static void main(String[] args) {

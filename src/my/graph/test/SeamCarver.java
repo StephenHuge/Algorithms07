@@ -1,133 +1,193 @@
 package my.graph.test;
 
 import edu.princeton.cs.algs4.Picture;
+import edu.princeton.cs.algs4.StdOut;
 
+import java.awt.*;
+
+/**
+ * Created by yiyuanliu on 2017/2/2.
+ */
 public class SeamCarver {
-
     private int[][] colors;
 
-    public SeamCarver(Picture picture)                // create a seam carver object based on the given picture
-    {
-        if (picture == null)    throw new java.lang.IllegalArgumentException();
+    public SeamCarver(Picture picture) {
+        if (picture == null) throw new NullPointerException();
         colors = new int[picture.width()][picture.height()];
+        for (int i = 0; i < width(); i++) {
+            for (int j = 0; j < height(); j++) {
+                colors[i][j] = picture.get(i, j).getRGB();
+            }
+        }
+    }
 
-        for (int i = 0; i < width(); i++) {
-            for (int j = 0; j < height(); j++) {
-                colors[i][j] = picture.getRGB(i, j);
+    public Picture picture() {
+        Picture picture = new Picture(colors.length, colors[0].length);
+        for (int i = 0; i < colors.length; i++) {
+            for (int j = 0; j < colors[0].length; j++) {
+                Color color = new Color(this.colors[i][j]);
+                picture.set(i, j, color);
             }
         }
+        return picture;
     }
-    public Picture picture()                          // current picture
-    {
-        Picture pic = new Picture(colors.length, colors[0].length);
-        for (int i = 0; i < width(); i++) {
-            for (int j = 0; j < height(); j++) {
-                pic.setRGB(i, j, colors[i][j]);
-            }
+
+    public int width() {
+        return this.colors.length;
+    }
+
+    public int height() {
+        return this.colors[0].length;
+    }
+
+    public double energy(int x, int y) {
+        if (x < 0 || x > this.width() - 1 || y < 0 || y > this.height() - 1) {
+            throw new IndexOutOfBoundsException();
         }
-        return pic;
-    }
-    public int width()                            // width of current picture
-    {
-        return colors.length;
-    }
-    public int height()                           // height of current picture
-    {
-        return colors[0].length;
-    }
-    public double energy(int x, int y)               // energy of pixel at column x and row y
-    {
-        if ((x < 0 || x > width()) || (y < 0 || y > height()) )
-            throw new java.lang.IllegalArgumentException("Illegal x and y");
-        if ((x == 0 || x == width() - 1) || (y == 0 || y == height() - 1))    
+        if (x == 0 || x == this.width() - 1 || y == 0 || y == this.height() - 1) {
             return 1000.0;
-        double dx = square(getBlue(x + 1, y) - getBlue(x - 1, y))
-                + square(getGreen(x + 1, y) - getGreen(x - 1, y))
-                + square(getRed(x + 1, y) - getRed(x - 1, y));
-        double dy = square(getBlue(x, y - 1) - getBlue(x, y + 1))
-                + square(getGreen(x, y - 1) - getGreen(x, y + 1))
-                + square(getRed(x, y - 1) - getRed(x, y + 1));
+        } else {
+            int deltaXRed = red(colors[x - 1][y]) -
+                    red(colors[x + 1][y]);
+            int deltaXGreen = green(colors[x - 1][y]) -
+                    green(colors[x + 1][y]);
+            int deltaXBlue = blue(colors[x - 1][y]) -
+                    blue(colors[x + 1][y]);
 
-        double ans = Math.sqrt(dx + dy);
-        return ans;
-    }
-    private double square(int i) {
-        return i * i;
-    }
-    private int getRed(int i, int j) {
-        return (colors[i][j] >> 16) & 0xFF;
-    }
-    private int getGreen(int i, int j) {
-        return (colors[i][j] >> 8) & 0xFF;
-    }
-    private int getBlue(int i, int j) {
-        return (colors[i][j] >> 0) & 0xFF;
+            int deltaYRed = red(colors[x][y - 1]) - red(colors[x][y + 1]);
+            int deltaYGreen = green(colors[x][y - 1]) - green(colors[x][y + 1]);
+            int deltaYBlue = blue(colors[x][y - 1]) - blue(colors[x][y + 1]);
+
+            return Math.sqrt(Math.pow(deltaXRed, 2) + Math.pow(deltaXBlue, 2) + Math.pow(deltaXGreen, 2) + Math.pow(deltaYRed, 2) + Math.pow(deltaYBlue, 2) + Math.pow(deltaYGreen, 2));
+        }
+
     }
 
-    public int[] findHorizontalSeam()               // sequence of indices for horizontal seam
-    {
-        return null;
+    public int[] findHorizontalSeam() {
+        this.colors = transpose(this.colors);
+        int[] seam = findVerticalSeam();
+        this.colors = transpose(this.colors);
+        return seam;
     }
-    public int[] findVerticalSeam()                 // sequence of indices for vertical seam
-    {
-        int n           = height() * width();
-        int[] seam      = new int[height()];
-        int[] nodeTo    = new int[n];
+
+
+    public int[] findVerticalSeam() {
+        int n = this.width() * this.height();
+        int[] seam = new int[this.height()];
+        int[] nodeTo = new int[n];
         double[] distTo = new double[n];
-
         for (int i = 0; i < n; i++) {
-            if (i < width())    distTo[i] = 1000;
-            else                distTo[i] = Double.POSITIVE_INFINITY;
-            nodeTo[i] = -1;
+            if (i < width())
+                distTo[i] = 0;
+            else
+                distTo[i] = Double.POSITIVE_INFINITY;
         }
         for (int i = 0; i < height(); i++) {
             for (int j = 0; j < width(); j++) {
                 for (int k = -1; k <= 1; k++) {
-                    if (i == height() - 1 || j == 0 || j == width() - 1)   
+                    if (j + k < 0 || j + k > this.width() - 1 || i + 1 < 0 || i + 1 > this.height() - 1) {
                         continue;
-                    if (distTo[index(i + 1, j + k)] > distTo[index(i, j)] + energy(j, i)) {
-                        distTo[index(i + 1, j + k)] = distTo[index(i, j)] + energy(j, i);
-                        nodeTo[index(i + 1, j + k)] = index(i, j);
+                    } else {
+                        if (distTo[index(j + k, i + 1)] > distTo[index(j, i)] + energy(j, i)) {
+                            distTo[index(j + k, i + 1)] = distTo[index(j, i)] + energy(j, i);
+                            nodeTo[index(j + k, i + 1)] = index(j, i);
+                        }
                     }
                 }
             }
         }
-        System.out.println();
-        for (int i = 0; i < n; i++) {
-//            System.out.printf("%9.2f(", distTo[i]);
-//            System.out.printf( "%3d) ", nodeTo[i] % width());
-            if ((i + 1) % width() == 0)
-                System.out.println("\n");
-        }
+
+        // find min dist in the last row
         double min = Double.POSITIVE_INFINITY;
         int index = -1;
-        for (int i = 1; i <= width(); i++) {
-            if (min > distTo[distTo.length - i]) {
-                min = distTo[distTo.length - i];
-                index = nodeTo[index(height() - 1, i)];
+        for (int j = 0; j < width(); j++) {
+            if (distTo[j + width() * (height() - 1)] < min) {
+                index = j + width() * (height() - 1);
+                min = distTo[j + width() * (height() - 1)];
             }
         }
-        int pivot = seam.length - 1;
-        int point = index % height();
-        while (point != -1) {
-            seam[pivot--] = point % height();
-            point = nodeTo[point];
+
+        // find seam one by one
+        for (int j = 0; j < height(); j++) {
+            int y = height() - j - 1;
+            int x = index - y * width();
+            seam[height() - 1 - j] = x;
+            index = nodeTo[index];
         }
+
         return seam;
     }
-    private int index(int i, int j) {
-        return (i * width()) + j;
-    }
-    public void removeHorizontalSeam(int[] seam)   // remove horizontal seam from current picture
-    {
-    }
-    public void removeVerticalSeam(int[] seam)     // remove vertical seam from current picture
-    {
+
+    public void removeHorizontalSeam(int[] seam) {
+        if (height() <= 1) throw new IllegalArgumentException();
+        if (seam == null) throw new NullPointerException();
+        if (seam.length != width()) throw new IllegalArgumentException();
+
+        for (int i = 0; i < seam.length; i++) {
+            if (seam[i] < 0 || seam[i] > height() - 1)
+                throw new IllegalArgumentException();
+            if (i < width() - 1 && Math.pow(seam[i] - seam[i + 1], 2) > 1)
+                throw new IllegalArgumentException();
+        }
+
+        int[][] updatedColor = new int[width()][height() - 1];
+        for (int i = 0; i < seam.length; i++) {
+            if (seam[i] == 0) {
+                System.arraycopy(this.colors[i], seam[i] + 1, updatedColor[i], 0, height() - 1);
+            } else if (seam[i] == height() - 1) {
+                System.arraycopy(this.colors[i], 0, updatedColor[i], 0, height() - 1);
+            } else {
+                System.arraycopy(this.colors[i], 0, updatedColor[i], 0, seam[i]);
+                System.arraycopy(this.colors[i], seam[i] + 1, updatedColor[i], seam[i], height() - seam[i] - 1);
+            }
+
+        }
+        this.colors = updatedColor;
     }
 
-    public static void main(String[] args) {
-        Picture pic = new Picture("src/7x10.png");
-        SeamCarver sc = new SeamCarver(pic);
-
+    public void removeVerticalSeam(int[] seam) {
+        this.colors = transpose(this.colors);
+        removeHorizontalSeam(seam);
+        this.colors = transpose(this.colors);
     }
+
+
+    private int red(int rgb) {
+        return (rgb >> 16) & 0xFF;
+    }
+
+    private int green(int rgb) {
+        return (rgb >> 8) & 0xFF;
+    }
+
+    private int blue(int rgb) {
+        return (rgb >> 0) & 0xFF;
+    }
+
+    private int index(int x, int y) {
+        return width() * y + x;
+    }
+
+    private int[][] transpose(int[][] origin) {
+        if (origin == null) throw new NullPointerException();
+        if (origin.length < 1) throw new IllegalArgumentException();
+        int[][] result = new int[origin[0].length][origin.length];
+        for (int i = 0; i < origin[0].length; i++) {
+            for (int j = 0; j < origin.length; j++) {
+                result[i][j] = origin[j][i];
+            }
+        }
+        return result;
+    }
+
+//    public static void main(String[] args) {
+//        String path = "/Users/yiyuanliu/IdeaProjects/Seam Carving/seamCarving/10x10.png";
+//        Picture picture = new Picture(path);
+//        StdOut.println("row:" + picture.height() + " column:" + picture.width());
+//        SeamCarver sc = new SeamCarver(picture);
+//        int[] verticalSeam = sc.findVerticalSeam();
+//        for (int x : verticalSeam)
+//            StdOut.print(x + " ");
+//    }
+
 }

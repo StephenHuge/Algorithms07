@@ -1,3 +1,4 @@
+package my.graph.test;
 import java.awt.Color;
 
 import edu.princeton.cs.algs4.IndexMinPQ;
@@ -12,24 +13,25 @@ import edu.princeton.cs.algs4.StdOut;
  * 3. refresh() : refresh this picture, return a modified one  
  */
 public class VerticalSolver {
-    
+
     private IndexMinPQ<Pixel> minPQ;
-    
+
     private Pixel[][] pixels;
-    
+
     private int h;
-    
+
     private int w;
-    
+
     private Picture after;
-    
+
     public VerticalSolver(Pixel[][] ps) {
         this.h = ps.length;
         this.w = ps[0].length; 
-//        System.out.printf("h : %d, w : %d", h, w);
         pixels = copy(ps);
         minPQ = new IndexMinPQ<>(h * w);
-        
+        init();
+    }
+    private Pixel init() {
         for (int j = 0; j < pixels[0].length; j++) {
             pixels[0][j].setDistance(1000.0);           // initialize the first row
             Pixel son = pixels[1][j];
@@ -37,8 +39,25 @@ public class VerticalSolver {
             if (j == 0)     son.setFather(pixels[0][j]); 
             else            son.setFather(pixels[0][j - 1]);
         }
+        // 1. get distances of pixels
+        for (int i = 1; i < w - 1; i++) {
+            minPQ.insert((w * 1) + i, pixels[1][i]);
+        }
+        Pixel ans = null;
+        while (!minPQ.isEmpty()) {
+            Pixel p = minPQ.minKey();
+            minPQ.delMin();
+            Pixel[] neighbors = neighbors(p);
+            // 2. judge if we are in the last row, if yes, then stop step 1 and get the pixel
+            if (neighbors == null) {
+                ans = p;
+                break;
+            } 
+            for (Pixel n : neighbors)
+                if (n != null)  relax(p, n);     
+        }
+        return ans;
     }
-    
     private Pixel[][] copy(Pixel[][] ps) {
         Pixel[][] ans = new Pixel[h][w];
         for (int i = 0; i < ps.length; i++) 
@@ -48,24 +67,7 @@ public class VerticalSolver {
     }
 
     public int[] solve() {
-        // TODO
-        // 1. get distances of pixels
-        for (int i = 1; i < w - 1; i++) {
-            minPQ.insert((w * 1) + i, pixels[1][i]);
-        }
-        Pixel lastRow = null;
-        while (!minPQ.isEmpty()) {
-            Pixel p = minPQ.minKey();
-            minPQ.delMin();
-            Pixel[] neighbors = neighbors(p);
-            // 2. judge if we are in the last row, if yes, then stop step 1 and get the pixel
-            if (neighbors == null) {
-                lastRow = p;
-                break;
-            } 
-            for (Pixel n : neighbors)
-                if (n != null)  relax(p, n);     
-        }
+        Pixel lastRow = init();
         // 3. use this pixel gotten from step 2 to generate the path, return it as an integer array
         int[] ans = new int[h];
         int pivot = h - 1;
@@ -78,37 +80,28 @@ public class VerticalSolver {
     }
     private void relax(Pixel pixel, Pixel neighbor) {
         if (neighbor.dist() > pixel.energy() + pixel.dist()) {
-//            System.out.println("releax : " + neighbor);
             neighbor.setDistance(pixel.energy() + pixel.dist());
             neighbor.setFather(pixel);
             int key = neighbor.row() * w + neighbor.col();
-            
+
             if (minPQ.contains(key))     minPQ.changeKey(key, neighbor);    // update value in minPQ
             else                         minPQ.insert(key, neighbor);
         }
     }
-    /**
-     * get three p's neighbors
-     * @param p
-     * @param direction
-     * @return
-     */
     private Pixel[] neighbors(Pixel p) {
-            if (p.row() == h - 1)    return null;
-            Pixel left, down, right;
-            if (p.col() == 0)               left = null;
-            else                            left = pixels[p.row() + 1][p.col() - 1];
-            if (p.col() == w - 1)     right = null;
-            else                            right = pixels[p.row() + 1][p.col() + 1];
-            
-            down =  pixels[p.row() + 1][p.col()];
-            return new Pixel[] { left, down, right};
+        if (p.row() == h - 1)    return null;
+        Pixel left, down, right;
+        if (p.col() == 0)               left = null;
+        else                            left = pixels[p.row() + 1][p.col() - 1];
+        if (p.col() == w - 1)     right = null;
+        else                            right = pixels[p.row() + 1][p.col() + 1];
+
+        down =  pixels[p.row() + 1][p.col()];
+        return new Pixel[] { left, down, right};
     }
     public void remove(int[] seam, Picture picture) {
-        // TODO   
         // 1. number in seam represent for col with specific index, 
         // when seam[i] = j means : pixel that col = i, row = j need to be removed
-//        Pixel[][] ans = new Pixel[h][w - 1];
         Picture ans = new Picture(w - 1, h);
         for (int i = 0; i < ans.height(); i++) {
             for (int j = 0, k = 0; j < ans.width(); j++, k++) {
@@ -118,11 +111,12 @@ public class VerticalSolver {
             }
         }
         after = ans;
-//        StdOut.printf("after: h %d, w %d", after.height(), after.width());
     } 
     public Picture refresh() {
-        // TODO
         return after;
+    }
+    public Pixel[][] pixels() {
+        return pixels;
     }
 }
 
@@ -130,12 +124,12 @@ public class VerticalSolver {
  * default iterate order of array is row -> col when direction is vertical, col -> row when horizontal
  */
 class SeamCarverWithOuterPixel {
-    
+
     private static final boolean HORIZONTAL = true;
 
     private static final boolean VERTICAL = false;
 
-     Pixel[][] pixels;
+    Pixel[][] pixels;
 
     private IndexMinPQ<Pixel> minPQ;
 
@@ -154,17 +148,17 @@ class SeamCarverWithOuterPixel {
         pixels = new Pixel[h][w];
         minPQ    = new IndexMinPQ<>(h * w);
 
-        for (int i = 0; i < pixels.length; i++)          // height of pixels (row)
-            for (int j = 0; j < pixels[0].length; j++)   // width of pixels  (col)
-                pixels[i][j] = new Pixel(j, i, energy(j, i)); 
-        
-        for (int j = 0; j < pixels[0].length; j++) {
-            pixels[0][j].setDistance(1000.0);           // initialize the first row
-            Pixel son = pixels[1][j];
-            son.setDistance(1000.0 + son.energy());
-            if (j == 0)     son.setFather(pixels[0][j]); 
-            else            son.setFather(pixels[0][j - 1]);
-        }
+//        for (int i = 0; i < pixels.length; i++)          // height of pixels (row)
+//            for (int j = 0; j < pixels[0].length; j++)   // width of pixels  (col)
+//                pixels[i][j] = new Pixel(j, i, energy(j, i)); 
+
+//        for (int j = 0; j < pixels[0].length; j++) {
+//            pixels[0][j].setDistance(1000.0);           // initialize the first row
+//            Pixel son = pixels[1][j];
+//            son.setDistance(1000.0 + son.energy());
+//            if (j == 0)     son.setFather(pixels[0][j]); 
+//            else            son.setFather(pixels[0][j - 1]);
+//        }
     }
     /**
      * get shortest path from top to bottom by modifying energyTo and edgeTo
@@ -187,11 +181,11 @@ class SeamCarverWithOuterPixel {
     }
     private void relax(Pixel pixel, Pixel neighbor) {
         if (neighbor.dist() > pixel.energy() + pixel.dist()) {
-//            System.out.println("releax : " + neighbor);
+            //            System.out.println("releax : " + neighbor);
             neighbor.setDistance(pixel.energy() + pixel.dist());
             neighbor.setFather(pixel);
             int key = neighbor.row() * width() + neighbor.col();
-            
+
             if (minPQ.contains(key))     minPQ.changeKey(key, neighbor);    // update value in minPQ
             else                         minPQ.insert(key, neighbor);
         }
@@ -210,7 +204,7 @@ class SeamCarverWithOuterPixel {
             else                            left = pixels[p.row() + 1][p.col() - 1];
             if (p.col() == width() - 1)     right = null;
             else                            right = pixels[p.row() + 1][p.col() + 1];
-            
+
             down =  pixels[p.row() + 1][p.col()];
             return new Pixel[] { left, down, right};
         } else {
@@ -268,14 +262,14 @@ class SeamCarverWithOuterPixel {
     public void removeVerticalSeam(int[] seam)     // remove vertical seam from current picture
     {
     }
-    
+
     public static void main(String[] args) {
         Picture picture = new Picture("src/7x10.png");
         StdOut.printf("image is %d pixels wide by %d pixels high.\n", picture.width(), picture.height());
-        
-//        SeamCarver sc = new SeamCarver(picture);
+
+        //        SeamCarver sc = new SeamCarver(picture);
         SeamCarverWithOuterPixel sc = new SeamCarverWithOuterPixel(picture);
-        
+
         /***********************************************************
          * test energy() 
          ************************************************************/
@@ -295,9 +289,9 @@ class SeamCarverWithOuterPixel {
                 StdOut.printf("%9.2f ", sc.pixels[row][col].dist());
             StdOut.println();
         }
-        
-        
-        
+
+
+
         System.out.println("-----------------------------------------");
         StdOut.printf("Printing distance calculated for each pixel.\n");
         for (int row = 0; row < sc.height(); row++) {
